@@ -9,21 +9,21 @@ async function deleteFiles() {
         try {
             await fs.unlink(file.fsPath);
             console.log(`Deleted file: ${file.fsPath}`);
-        } catch (error) {
-            console.error(`Failed to delete file ${file.fsPath}: ${error.message}`);
+        } catch (e) {
+            console.error(`Failed to delete file ${file.fsPath}: ${e.message}`);
         }
     }
     files.length = 0;
 }
 
-async function jumpToNewFile(fileName) {
+async function jumpToNewFile(fileUri) {
     try {
-        const file = await createNewFile(fileName);
+        const file = await createNewFile(fileUri);
         // console.log(file);
         const document = await vscode.workspace.openTextDocument(file);
         await vscode.window.showTextDocument(document);
-    } catch (error) {
-        vscode.window.showErrorMessage(`Failed to open file: ${error.message}`)
+    } catch (e) {
+        vscode.window.showErrorMessage(`Failed to open file: ${e.message}`)
     }
 }
 
@@ -40,6 +40,8 @@ async function createNewFile(fileName) {
         throw new Error(`Failed to create ${fileName}.`);
     }
 
+    await spawnText(fileUri, "hello world");
+
     console.log(`Created a new file: ${fileUri}`);
 
     files.push(fileUri);
@@ -47,6 +49,14 @@ async function createNewFile(fileName) {
     return fileUri;
 }
 
+async function spawnText(fileUri, text) {
+    try {
+        await vscode.workspace.fs.writeFile(fileUri, Buffer.from(text, 'utf-8'));
+        console.log(`Successfully written to file.`);
+    } catch (e) {
+        console.log(`Failed to write to file: ${e}`);
+    }
+}
 
 async function activate(context) {
     console.log("delete-me-vim is active!");

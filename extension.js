@@ -51,42 +51,11 @@ async function createNewFile(fileName) {
 async function activate(context) {
     console.log("delete-me-vim is active!");
 
-    // context.subscriptions.push(
-    //     vscode.commands.registerCommand("delete-me-vim.test", async () => {
-    //         const question = "ish u?";
-    //         console.log("Question:", question);
-    //         const answer = await vscode.window.showInformationMessage(
-    //             question,
-    //             "Yes",
-    //             "No"
-    //         );
-    //         console.log("Answer:", answer)
-    //     })
-    // );
-
     context.subscriptions.push(
         vscode.commands.registerCommand("delete-me-vim.test", async () => {
             await jumpToNewFile('delete-me-vim|relative-line-jump');
         })
     );
-    // context.subscriptions.push(
-    //     vscode.commands.registerCommand(
-    //         "delete-me-vim.relative-line-jump",
-    //         async () => {
-    //             await relativeLineJumpMode(context);
-    //         }
-    //     )
-    // );
-
-    // context.subscriptions.push(
-    //     vscode.commands.registerCommand(
-    //         "delete-me-vim.maze",
-    //         async () => {
-    //             await spawnMaze();
-    //         }
-    //     )
-    // );
-
 }
 
 async function deactivate() {

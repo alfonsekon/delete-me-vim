@@ -1,6 +1,6 @@
 {
   "name": "delete-me-vim",
-  "displayName": "Delete Me! - Vim",
+  "displayName": "Delete Me! Vim",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -25,7 +25,7 @@
         "command": "delete-me-vim.test",
         "title": "Delete Me! Vim - Test "
       }
-  ]
+    ]
   },
   "scripts": {
     "lint": "eslint .",

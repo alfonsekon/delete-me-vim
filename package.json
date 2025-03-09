@@ -1,6 +1,6 @@
 {
   "name": "delete-me-vim",
-  "displayName": "Delete Me Vim",
+  "displayName": "Delete Me! - Vim",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -12,10 +12,20 @@
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
-    "commands": [{
-      "command": "delete-me-vim.spawn",
-      "title": "Delete Me Vim"
-    }]
+    "commands": [
+      {
+        "command": "delete-me-vim.relative-line-jump",
+        "title": "Delete Me! Vim - Relative Line Jump"
+      },
+      {
+        "command": "delete-me-vim.maze",
+        "title": "Delete Me! Vim - Maze"
+      },
+      {
+        "command": "delete-me-vim.test",
+        "title": "Delete Me! Vim - Test "
+      }
+  ]
   },
   "scripts": {
     "lint": "eslint .",

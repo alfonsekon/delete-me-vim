@@ -1,79 +1,97 @@
 const vscode = require('vscode');
-const path = require('path');
-const fs = require('fs').promises;
 const os = require('os');
+const fs = require('fs').promises;
+const path = require('path');
+const files = [];
 
-async function createTempFile(numOfLines) {
-    const tempDir = os.tmpdir();
-    const filePath = path.join(tempDir, 'delete-me.txt');
-
-    await fs.writeFile(filePath, '\n'.repeat(numOfLines));
-
-    const document = await vscode.workspace.openTextDocument(filePath);
-    const editor = await vscode.window.showTextDocument(document);
-
-    return { document, editor, filePath };
-}
-
-async function spawnDeleteMe(context, editor, document) {
-    const totalLines = document.lineCount;
-    const randomLine = Math.floor(Math.random() * totalLines);
-
-    await editor.edit(editBuilder => {
-        editBuilder.insert(new vscode.Position(randomLine, 0), 'delete me!\n');
-    });
-
-    context.workspaceState.update('deleteMeLine', randomLine);
-}
-
-function activate(context) {
-    console.log('delete-me-vim is now active!');
-
-    let numOfLines = 20;
-    let isFileOpen = true; 
-    let deleteCount = 0;
-
-    let insertDisposable = vscode.commands.registerCommand('delete-me-vim.spawn', async function () {
-        const { document, editor, filePath } = await createTempFile(numOfLines);
-
-        const closeListener = vscode.workspace.onDidCloseTextDocument(closedDoc => {
-            if (closedDoc.fileName === filePath) {
-                isFileOpen = false;
-                console.log('delete-me.txt closed. Stopping loop.');
-            }
-        });
-
-        while (isFileOpen) {
-            await spawnDeleteMe(context, editor, document);
-
-            await new Promise(resolve => {
-                let deleteListener = vscode.workspace.onDidChangeTextDocument(event => {
-                    const deleteMeLine = context.workspaceState.get('deleteMeLine');
-                    if (deleteMeLine === undefined) return;
-
-                    const deleted = event.contentChanges.some(change => {
-                        return change.range.start.line === deleteMeLine && change.text === '';
-                    });
-
-                    if (deleted) {
-                        deleteCount++;
-                        vscode.window.showInformationMessage(`Delete Count: ${deleteCount}`);
-                        context.workspaceState.update('deleteMeLine', undefined);
-                        deleteListener.dispose(); // Stop listening for deletions
-                        resolve(); // Continue the loop
-                    }
-                });
-
-                context.subscriptions.push(deleteListener);
-            });
+async function deleteFiles() {
+    for (const file of files) {
+        try {
+            await fs.unlink(file.fsPath);
+            console.log(`Deleted file: ${file.fsPath}`);
+        } catch (error) {
+            console.error(`Failed to delete file ${file.fsPath}: ${error.message}`);
         }
-
-        closeListener.dispose();
-    });
-
-    context.subscriptions.push(insertDisposable);
+    }
+    files.length = 0;
 }
 
-function deactivate() {}
+async function jumpToNewFile(fileName) {
+    try {
+        const file = await createNewFile(fileName);
+        // console.log(file);
+        const document = await vscode.workspace.openTextDocument(file);
+        await vscode.window.showTextDocument(document);
+    } catch (error) {
+        vscode.window.showErrorMessage(`Failed to open file: ${error.message}`)
+    }
+}
+
+async function createNewFile(fileName) {
+    const tempDir = os.tmpdir();
+    const file = path.join(tempDir, fileName);
+    const fileUri = vscode.Uri.file(file);
+
+    const wsedit = new vscode.WorkspaceEdit();
+    wsedit.createFile(fileUri, { ignoreIfExists: true });
+
+    const created = await vscode.workspace.applyEdit(wsedit);
+    if (!created) {
+        throw new Error(`Failed to create ${fileName}.`);
+    }
+
+    console.log(`Created a new file: ${fileUri}`);
+
+    files.push(fileUri);
+
+    return fileUri;
+}
+
+
+async function activate(context) {
+    console.log("delete-me-vim is active!");
+
+    // context.subscriptions.push(
+    //     vscode.commands.registerCommand("delete-me-vim.test", async () => {
+    //         const question = "ish u?";
+    //         console.log("Question:", question);
+    //         const answer = await vscode.window.showInformationMessage(
+    //             question,
+    //             "Yes",
+    //             "No"
+    //         );
+    //         console.log("Answer:", answer)
+    //     })
+    // );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand("delete-me-vim.test", async () => {
+            await jumpToNewFile('delete-me-vim|relative-line-jump');
+        })
+    );
+    // context.subscriptions.push(
+    //     vscode.commands.registerCommand(
+    //         "delete-me-vim.relative-line-jump",
+    //         async () => {
+    //             await relativeLineJumpMode(context);
+    //         }
+    //     )
+    // );
+
+    // context.subscriptions.push(
+    //     vscode.commands.registerCommand(
+    //         "delete-me-vim.maze",
+    //         async () => {
+    //             await spawnMaze();
+    //         }
+    //     )
+    // );
+
+}
+
+async function deactivate() {
+    console.log(`delete-me-vim is deactivating, removing all temporary files`);
+    await deleteFiles();
+}
 
 module.exports = { activate, deactivate };

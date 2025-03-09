@@ -1,10 +1,12 @@
 const { deleteFiles } = require('./utils/utils');
-const { testExtension, testMsg } = require('./modes/test');
+const { testExtension } = require('./modes/test');
+const { relativeLineJump } = require('./modes/relativeLineJump');
 
 async function activate(context) {
     console.log("delete-me-vim is active!");
-    console.log(testMsg);
+
     await testExtension(context);
+    await relativeLineJump(context);
 
 }
 

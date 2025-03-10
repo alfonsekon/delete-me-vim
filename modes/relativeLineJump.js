@@ -1,6 +1,7 @@
 const vscode = require("vscode");
 const { jumpToNewFile, spawnText, createNewFile } = require('../utils/utils');
 const lineCount = 15;
+let deleteCount = 0;
 
 async function spawnNLines(fileUri, numOfLines) {
     let text = '\n'.repeat(numOfLines);
@@ -31,7 +32,7 @@ async function spawnDeleteMe(fileUri, customMsg = 'Delete Me!') {
         editBuilder.insert(new vscode.Position(lineNumber, 0), customMsg);
     })
 
-    vscode.window.showInformationMessage(`Spawned '${customMsg}' on line ${lineNumber + 1}.`); //+1 for 1 index
+    // vscode.window.showInformationMessage(`Spawned '${customMsg}' on line ${lineNumber + 1}.`); //+1 for 1 index
     await deleteListener(document, customMsg, lineNumber);
 }
 
@@ -53,7 +54,8 @@ async function deleteListener(document, targetMsg, lineNumber) {
             const stillExists = await checkMsg(document, targetMsg, lineNumber);
             // console.log(`stillExists?: ${stillExists}`);
             if (!stillExists) {
-                vscode.window.showInformationMessage(`${targetMsg} has been deleted!`);
+                deleteCount++;
+                vscode.window.showInformationMessage(`Score: ${deleteCount}`);
                 disposable.dispose();
 
                 const fileUri = document.uri;

@@ -4,7 +4,33 @@ const fs = require('fs').promises;
 const path = require('path');
 const files = [];
 
+// async function checkIfFileExists(fileName) {
+//     const filePath = path.join(os.tmpdir(), fileName);
+//     if (filePath) {
+//         return true;
+//     }
+//     return false;
+// }
+
+async function deleteFile(fileName) {
+    /**
+     * takes in a filename and removes os.tmpdir() + filename
+     * all files are created within the temporary directory
+     */
+    const filePath = path.join(os.tmpdir(), fileName)
+
+    try {
+        await fs.unlink(filePath);
+        console.log(`${filePath} deleted.`)
+    } catch (e) {
+        console.error(`Failed to delete ${filePath}: ${e.message}`);
+    }
+}
+
 async function deleteFiles() {
+    /**
+     * iterates through global `files` and deletes each file one by one
+     */
     for (const file of files) {
         try {
             await fs.unlink(file.fsPath);
@@ -17,6 +43,9 @@ async function deleteFiles() {
 }
 
 async function jumpToNewFile(fileUri) {
+    /**
+     * takes in a fileUri and jumps to new newly created file. use hand-in-hand with createNewFile. 
+     */
     try {
         const document = await vscode.workspace.openTextDocument(fileUri);
         await vscode.window.showTextDocument(document);
@@ -27,9 +56,13 @@ async function jumpToNewFile(fileUri) {
 }
 
 async function createNewFile(fileName) {
+    /**
+     * creates new file in the os temp directory with the given file name which depends on the mode.
+     * returns the fileUri for jumpToNewFile to use
+     */
     const tempDir = os.tmpdir();
-    const file = path.join(tempDir, fileName);
-    const fileUri = vscode.Uri.file(file);
+    const filePath = path.join(tempDir, fileName);
+    const fileUri = vscode.Uri.file(filePath);
 
     const wsedit = new vscode.WorkspaceEdit();
     wsedit.createFile(fileUri, { ignoreIfExists: true });
@@ -46,12 +79,14 @@ async function createNewFile(fileName) {
 }
 
 async function spawnText(fileUri, text) {
+    let written = false;
     try {
-        await vscode.workspace.fs.writeFile(fileUri, Buffer.from(text, 'utf-8'));
+        written = await vscode.workspace.fs.writeFile(fileUri, Buffer.from(text, 'utf-8'));
         console.log(`Successfully written to file.`);
     } catch (e) {
         console.log(`Failed to write to file: ${e}`);
     }
+    return written
 }
 
-module.exports = { deleteFiles, jumpToNewFile, createNewFile, spawnText, files };
+module.exports = { deleteFile, deleteFiles, jumpToNewFile, createNewFile, spawnText, files };

@@ -18,12 +18,8 @@
         "title": "Delete Me! Vim - Relative Line Jump"
       },
       {
-        "command": "delete-me-vim.maze",
-        "title": "Delete Me! Vim - Maze"
-      },
-      {
         "command": "delete-me-vim.test",
-        "title": "Delete Me! Vim - Test "
+        "title": "Delete Me! Vim - Test"
       }
     ]
   },

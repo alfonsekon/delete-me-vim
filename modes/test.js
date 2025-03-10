@@ -7,6 +7,8 @@ async function testExtension(context) {
             const fileUri = await createNewFile('delete-me-vim|test');
             await spawnText(fileUri, testMsg);
             await jumpToNewFile(fileUri);
+
+            vscode.window.showInformationMessage("extension works, nice.");
         })
     );
 }

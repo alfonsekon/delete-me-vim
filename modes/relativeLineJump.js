@@ -1,7 +1,21 @@
 const vscode = require("vscode");
 const { jumpToNewFile, spawnText, createNewFile } = require('../utils/utils');
 const lineCount = 15;
-let deleteCount = 0;
+let score = 0;
+let statusBarItem;
+
+async function updateScore() {
+    score++;
+    statusBarItem.text = `Line Jump Score: ${score}`;
+    statusBarItem.show();
+}
+
+async function showStatusBar() {
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    statusBarItem.text = `Line Jump Score: 0`;
+    statusBarItem.tooltip = `Delete Me! Vim - Relative Line Jump score`;
+    statusBarItem.show();
+}
 
 async function spawnNLines(fileUri, numOfLines) {
     let text = '\n'.repeat(numOfLines);
@@ -54,8 +68,7 @@ async function deleteListener(document, targetMsg, lineNumber) {
             const stillExists = await checkMsg(document, targetMsg, lineNumber);
             // console.log(`stillExists?: ${stillExists}`);
             if (!stillExists) {
-                deleteCount++;
-                vscode.window.showInformationMessage(`Score: ${deleteCount}`);
+                await updateScore();
                 disposable.dispose();
 
                 const fileUri = document.uri;
@@ -71,6 +84,7 @@ async function relativeLineJump(context) {
             const fileUri = await createNewFile('delete-me-vim|relative-line-jump');
             await spawnNLines(fileUri, lineCount);
             await jumpToNewFile(fileUri);
+            await showStatusBar();
             await spawnDeleteMe(fileUri);
         })
     );

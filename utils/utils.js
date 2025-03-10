@@ -64,8 +64,15 @@ async function createNewFile(fileName) {
     const filePath = path.join(tempDir, fileName);
     const fileUri = vscode.Uri.file(filePath);
 
+    // try {
+    //     await fs.unlink(filePath);
+    //     console.log(`Deleted file before making a new one: ${filePath}`);
+    // } catch (e) {
+    //     console.error(e.message);
+    // }
+
     const wsedit = new vscode.WorkspaceEdit();
-    wsedit.createFile(fileUri, { ignoreIfExists: true });
+    wsedit.createFile(fileUri, { overwrite: true });
 
     const created = await vscode.workspace.applyEdit(wsedit);
     if (!created) {

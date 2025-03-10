@@ -4,14 +4,6 @@ const fs = require('fs').promises;
 const path = require('path');
 const files = [];
 
-// async function checkIfFileExists(fileName) {
-//     const filePath = path.join(os.tmpdir(), fileName);
-//     if (filePath) {
-//         return true;
-//     }
-//     return false;
-// }
-
 async function deleteFile(fileName) {
     /**
      * takes in a filename and removes os.tmpdir() + filename
@@ -64,12 +56,12 @@ async function createNewFile(fileName) {
     const filePath = path.join(tempDir, fileName);
     const fileUri = vscode.Uri.file(filePath);
 
-    // try {
-    //     await fs.unlink(filePath);
-    //     console.log(`Deleted file before making a new one: ${filePath}`);
-    // } catch (e) {
-    //     console.error(e.message);
-    // }
+    try {
+        await fs.unlink(filePath);
+        console.log(`Deleted file before making a new one: ${filePath}`);
+    } catch (e) {
+        console.error(e.message);
+    }
 
     const wsedit = new vscode.WorkspaceEdit();
     wsedit.createFile(fileUri, { overwrite: true });

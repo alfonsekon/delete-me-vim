@@ -10,9 +10,9 @@ let playing = false;
 let score = 0;
 let scoreStatusbarItem;
 
-// let countdown = 3;
-// let countdownInterval;
-// let countdownStatusBarItem;
+let countdown = 3;
+let countdownInterval;
+let countdownStatusBarItem;
 
 let timer = 0;
 let timerInterval;
@@ -20,6 +20,7 @@ let timerStatusBarItem;
 
 function reset() {
     MESSAGE = 'Delete Me!';
+    canAddScore = true;
     playing = false;
     timer = 0;
     score = 0;
@@ -33,10 +34,47 @@ function reset() {
         timerStatusBarItem = undefined;
     }
 
+    if (countdownStatusBarItem) {
+        countdownStatusBarItem.dispose();
+        countdownStatusBarItem = undefined;
+    }
+
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = undefined;
     }
+
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = undefined;
+    }
+}
+
+async function startCountdown() {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+
+    countdown = 3;
+
+    if (!countdownStatusBarItem) {
+        countdownStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+        countdownStatusBarItem.show();
+    }
+
+    return new Promise((resolve) => {
+        countdownInterval = setInterval(() => {
+            if (countdown > 0) {
+                countdownStatusBarItem.text = `Starting in ${countdown}...`;
+                // vscode.window.showInformationMessage( `Starting in ${countdown}...`);
+                countdown--;
+            } else {
+                clearInterval(countdownInterval);
+                countdownStatusBarItem.hide();
+                resolve();
+            }
+        }, 1000);
+    });
 }
 
 async function endGame() {
@@ -44,7 +82,6 @@ async function endGame() {
         clearInterval(timerInterval);
     }
     vscode.window.showInformationMessage(`Good job! You deleted ${targetScore} targets in ${timer} seconds!`);
-    // vscode.window.showErrorMessage(`Time is up! Your score was ${score}`);
 }
 
 function startTimer() {
@@ -115,12 +152,6 @@ async function countDocumentLines(editor) {
     return { totalLines, document };
 }
 
-// async function spawnScore(fileUri, score) {
-//     const congratsMsg = `Congratulations! You were able to delete ${score} lines in ${countdown} seconds!`
-
-//     await spawnText(fileUri, congratsMsg);
-// }
-
 async function spawnWelcomeMsg(fileUri) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
@@ -135,23 +166,6 @@ async function spawnWelcomeMsg(fileUri) {
 
     await spawnText(fileUri, welcomeMsg);
 
-    // const yesLineNumber = 7
-    // const noLineNumber = 8
-    // const lines = welcomeMsg.split('\n');
-    // const yesLineNumber = lines.findIndex(line => line.trim() === '[Yes]');
-    // const noLineNumber = lines.findIndex(line => line.trim() === '[No]');
-
-    //i need to distinguish this document from the '...|relative-line-jump' document 
-    const { document } = await countDocumentLines(editor);
-
-
-    // return new Promise((resolve) => {
-    //     deleteListener(document, `[Yes]`, yesLineNumber, () => resolve('Yes'));
-    //     deleteListener(document, `[No]`, noLineNumber, () => resolve('No'));
-    // });
-
-
-    //making new file for the prompt and response is broken, will stick to notif GUI for now for response
     return vscode.window.showInformationMessage("Up for a challenge?", "Yes", "No");
 }
 
@@ -205,7 +219,6 @@ async function deleteListener(document, targetMsg, lineNumber, onDelete) {
             const stillExists = await checkMsg(document, targetMsg, lineNumber);
             // console.log(`stillExists ?: ${ stillExists } `);
             if (!stillExists) {
-                // vscode.window.showInformationMessage(`${targetMsg} deleted at line ${lineNumber}`);
                 disposable.dispose();
                 await onDelete();
             }
@@ -240,6 +253,7 @@ async function relativeLineJump(context) {
 
             if (answer === 'Yes') {
                 const gameFileUri = await initRLJ();
+                await startCountdown();
                 await startGame(gameFileUri);
                 await deleteFile('delete-me-vim|welcome-relative-line-jump');
             } else {

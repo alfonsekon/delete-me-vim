@@ -103,29 +103,18 @@ async function spawnWelcomeMsg(fileUri) {
     [No]
 
     `
-    const yesLineNumber = 7 //zero index
-    const noLineNumber = yesLineNumber + 1 //zero index
-    let answer = '';
-
     await spawnText(fileUri, welcomeMsg);
-    // let answer = vscode.window.showInformationMessage("What is your answer?", "Yes", "No");
+
+    const yesLineNumber = 8
+    const noLineNumber = yesLineNumber + 1
 
     //i need to distinguish this document from the '...|relative-line-jump' document 
-    const { totalLines } = await countDocumentLines(editor);
     const { document } = await countDocumentLines(editor);
 
-    const isYesDeleted = await deleteListener(document, `[Yes]`, yesLineNumber);
-    const isNoDeleted = await deleteListener(document, `[No]`, noLineNumber);
-
-    if (isYesDeleted) {
-        answer = 'Yes'
-    } else if (isNoDeleted) {
-        answer = 'No';
-    } else {
-        answer = 'Invalid';
-    }
-
-    return answer;
+    return new Promise((resolve) => {
+        deleteListener(document, `[Yes]`, yesLineNumber, () => resolve('Yes'));
+        deleteListener(document, `[No]`, noLineNumber, () => resolve('No'));
+    });
 }
 
 async function spawnDeleteMe(fileUri, customMsg = MAIN_MESSAGE) {
@@ -142,17 +131,22 @@ async function spawnDeleteMe(fileUri, customMsg = MAIN_MESSAGE) {
     })
 
     playing = true;
+
+    //console logs because im paranoid :)
     if (countdown > 0) {
         console.log(`RLJ is ongoing!`)
     } else {
         console.log("RLJ has stopped. score does not count anymore")
     }
-
     // vscode.window.showInformationMessage(`Spawned '${customMsg}' on line ${ lineNumber + 1 }.`); //+1 for 1 index
-    let deleted = await deleteListener(document, customMsg, lineNumber);
-    // if (deleted) {
-    //     await spawnDeleteMe(fileUri);
-    // }
+
+    await deleteListener(document, customMsg, lineNumber, async () => {
+        await updateScore();
+        if (countdown > 0) {
+            await spawnDeleteMe(fileUri);
+        }
+    });
+
     return playing;
 }
 
@@ -167,24 +161,19 @@ async function checkMsg(document, targetMsg, lineNumber) {
     return (line.text).length !== 0;
 }
 
-async function deleteListener(document, targetMsg, lineNumber) {
-    let deleted = false;
+async function deleteListener(document, targetMsg, lineNumber, onDelete) {
     const disposable = vscode.workspace.onDidChangeTextDocument(async event => {
         // console.log(`is correct document ?: ${ event.document === document } `);
         if (event.document === document) {
             const stillExists = await checkMsg(document, targetMsg, lineNumber);
             // console.log(`stillExists ?: ${ stillExists } `);
             if (!stillExists) {
-                await updateScore();
+                vscode.window.showInformationMessage(`${targetMsg} deleted at line ${lineNumber}`);
                 disposable.dispose();
-                deleted = true;
-
-                const fileUri = document.uri;
-                await spawnDeleteMe(fileUri);
+                await onDelete();
             }
         }
     });
-    return deleted;
 }
 
 async function startGame(fileUri) {
@@ -205,20 +194,19 @@ async function initRLJ() {
 async function relativeLineJump(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand("delete-me-vim.relative-line-jump", async () => {
-            // const welcomeFileUri = await createNewFile('delete-me-vim|welcome')
-            // await jumpToNewFile(welcomeFileUri);
-            // const answer = await spawnWelcomeMsg(welcomeFileUri);
-            // console.log(`ANSWER: ${answer}`);
-            const fileUri = await initRLJ();
-            await startGame(fileUri);
+            const welcomeFileUri = await createNewFile('delete-me-vim|welcome')
+            await jumpToNewFile(welcomeFileUri);
 
-            // if (answer === 'Yes') {
-            // } else if (answer === 'No') {
-            //     vscode.window.showInformationMessage('Well, try again next time!');
-            //     vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-            // } else {
-            //     vscode.window.showInformationMessage('Invalid Choice.');
-            // }
+            const answer = await spawnWelcomeMsg(welcomeFileUri);
+            console.log(`ANSWER: ${answer}`);
+
+            if (answer === 'Yes') {
+                const gameFileUri = await initRLJ();
+                await startGame(gameFileUri);
+            } else {
+                vscode.window.showInformationMessage('Well, try again next time!');
+                vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            }
         })
     );
 }

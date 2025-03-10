@@ -15,8 +15,8 @@ let scoreStatusbarItem;
 // let countdownStatusBarItem;
 
 let timer = 0;
-let countdownInterval;
-let countdownStatusBarItem;
+let timerInterval;
+let timerStatusBarItem;
 
 function reset() {
     MESSAGE = 'Delete Me!';
@@ -28,56 +28,57 @@ function reset() {
         scoreStatusbarItem.dispose();
         scoreStatusbarItem = undefined;
     }
-    if (countdownStatusBarItem) {
-        countdownStatusBarItem.dispose();
-        countdownStatusBarItem = undefined;
+    if (timerStatusBarItem) {
+        timerStatusBarItem.dispose();
+        timerStatusBarItem = undefined;
     }
 
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
-        countdownInterval = undefined;
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = undefined;
     }
 }
 
 async function endGame() {
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
+    if (timerInterval) {
+        clearInterval(timerInterval);
     }
     vscode.window.showInformationMessage(`Good job! You deleted ${targetScore} targets in ${timer} seconds!`);
     // vscode.window.showErrorMessage(`Time is up! Your score was ${score}`);
 }
 
-function startCountdown() {
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
+function startTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
     }
 
+    const start = Date.now();
     timer = 0;
-    updateCountdownDisplay();
+    updateTimerDisplay();
 
-    countdownInterval = setInterval(() => {
-        timer++;
-        updateCountdownDisplay();
+    timerInterval = setInterval(() => {
+        timer = (Date.now() - start) / 1000;
+        updateTimerDisplay();
 
         if (score >= targetScore) {
-            clearInterval(countdownInterval);
-            MESSAGE = 'Time is Up!';
+            clearInterval(timerInterval);
+            MESSAGE = 'Game Over!';
             canAddScore = false;
             playing = false;
             endGame();
             // console.log(`RLJ has finished. Score was ${score}`);
             console.log(`RLJ has finished. Time elapsed: ${timer}`);
         }
-    }, 1000)
+    }, 100)
 }
 
-async function updateCountdownDisplay() {
-    if (!countdownStatusBarItem) {
-        countdownStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-        countdownStatusBarItem.show();
+async function updateTimerDisplay() {
+    if (!timerStatusBarItem) {
+        timerStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+        timerStatusBarItem.show();
     }
-    countdownStatusBarItem.text = `Time Elapsed: ${timer}s`;
-    countdownStatusBarItem.tooltip = `Delete Me! Vim - Relative Line Jump time elapsed`
+    timerStatusBarItem.text = `Time Elapsed: ${timer.toFixed(2)}s`;
+    timerStatusBarItem.tooltip = `Delete Me! Vim - Relative Line Jump time elapsed`
 }
 
 async function updateScore() {
@@ -204,7 +205,7 @@ async function deleteListener(document, targetMsg, lineNumber, onDelete) {
             const stillExists = await checkMsg(document, targetMsg, lineNumber);
             // console.log(`stillExists ?: ${ stillExists } `);
             if (!stillExists) {
-                vscode.window.showInformationMessage(`${targetMsg} deleted at line ${lineNumber}`);
+                // vscode.window.showInformationMessage(`${targetMsg} deleted at line ${lineNumber}`);
                 disposable.dispose();
                 await onDelete();
             }
@@ -213,7 +214,7 @@ async function deleteListener(document, targetMsg, lineNumber, onDelete) {
 }
 
 async function startGame(fileUri) {
-    startCountdown();
+    startTimer();
     await spawnDeleteMe(fileUri);
 }
 
@@ -222,7 +223,7 @@ async function initRLJ() {
     await spawnNLines(fileUri, lineCount);
     await jumpToNewFile(fileUri);
     await updateScoreDisplay();
-    await updateCountdownDisplay();
+    await updateTimerDisplay();
 
     return fileUri
 }
@@ -230,6 +231,7 @@ async function initRLJ() {
 async function relativeLineJump(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand("delete-me-vim.relative-line-jump", async () => {
+            reset();
             const welcomeFileUri = await createNewFile('delete-me-vim|welcome-relative-line-jump')
             await jumpToNewFile(welcomeFileUri);
 

@@ -19,10 +19,12 @@ let timerInterval;
 let timerStatusBarItem;
 
 function reset() {
+    MESSAGE = 'Delete Me!';
     canAddScore = true;
     playing = false;
     timer = 0;
     score = 0;
+    countdown = 3;
 
     if (scoreStatusBarItem) {
         scoreStatusBarItem.dispose();
@@ -80,7 +82,9 @@ async function endGame() {
     if (timerInterval) {
         clearInterval(timerInterval);
     }
-    vscode.window.showInformationMessage(`Good job! You deleted ${targetScore} targets in ${timer} seconds!`);
+    let tryAgain = await vscode.window.showInformationMessage(`Good job! You deleted ${targetScore} targets in ${timer} seconds! Would you like to play again?`, `Yes`, `No`);
+    console.log(`Try Again: ${tryAgain}`);
+    await checkAnswer(tryAgain);
 }
 
 function startTimer(document) {
@@ -261,14 +265,15 @@ async function initRLJ() {
     await jumpToNewFile(fileUri);
     await updateScoreDisplay();
     await updateTimerDisplay();
+    await startCountdown();
 
     return fileUri
 }
 
 async function checkAnswer(answer) {
     if (answer === 'Yes') {
+        reset();
         const gameFileUri = await initRLJ();
-        await startCountdown();
         await startGame(gameFileUri);
         await deleteFile('delete-me-vim|welcome-relative-line-jump');
     } else if (answer === 'No') {

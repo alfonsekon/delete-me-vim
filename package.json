@@ -3,7 +3,7 @@
   "publisher": "alfonsekon",
   "displayName": "Delete Me! Vim",
   "description": "Delete Me! Vim is an extension that aims to train your Vim motions, relative line jumping and line deletion in particular.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/alfonsekon/delete-me-vim"

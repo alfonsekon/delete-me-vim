@@ -277,7 +277,7 @@ async function checkAnswer(answer) {
         await startGame(gameFileUri);
         await deleteFile('delete-me-vim|welcome-relative-line-jump');
     } else if (answer === 'No') {
-        vscode.window.showInformationMessage('Well, try again next time!');
+        vscode.window.showInformationMessage('Come back next time!');
         vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
         reset();
         await deleteFile('delete-me-vim|welcome-relative-line-jump');

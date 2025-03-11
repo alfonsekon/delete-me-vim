@@ -2,13 +2,13 @@ const vscode = require("vscode");
 const { deleteFile, jumpToNewFile, spawnText, createNewFile } = require('../utils/utils');
 
 const lineCount = 15;
-const targetScore = 20;
+let targetScore = 20;
 let canAddScore = true;
 let MESSAGE = 'Delete Me!';
 let playing = false;
 
 let score = 0;
-let scoreStatusbarItem;
+let scoreStatusBarItem;
 
 let countdown = 3;
 let countdownInterval;
@@ -19,15 +19,14 @@ let timerInterval;
 let timerStatusBarItem;
 
 function reset() {
-    MESSAGE = 'Delete Me!';
     canAddScore = true;
     playing = false;
     timer = 0;
     score = 0;
 
-    if (scoreStatusbarItem) {
-        scoreStatusbarItem.dispose();
-        scoreStatusbarItem = undefined;
+    if (scoreStatusBarItem) {
+        scoreStatusBarItem.dispose();
+        scoreStatusBarItem = undefined;
     }
     if (timerStatusBarItem) {
         timerStatusBarItem.dispose();
@@ -84,14 +83,24 @@ async function endGame() {
     vscode.window.showInformationMessage(`Good job! You deleted ${targetScore} targets in ${timer} seconds!`);
 }
 
-function startTimer() {
+function startTimer(document) {
     if (timerInterval) {
         clearInterval(timerInterval);
     }
 
-    const start = Date.now();
     timer = 0;
+    const start = Date.now();
     updateTimerDisplay();
+
+    const tabListener = vscode.window.onDidChangeVisibleTextEditors((editors) => {
+        const isDocumentStillOpen = editors.some(editor => editor.document === document);
+        if (!isDocumentStillOpen) {
+            console.log(`delete-me-vim|relative-line-jump tab was closed, stopping timer.`);
+            stopTimer();
+            tabListener.dispose();
+            reset();
+        }
+    });
 
     timerInterval = setInterval(() => {
         timer = (Date.now() - start) / 1000;
@@ -109,6 +118,21 @@ function startTimer() {
     }, 100)
 }
 
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = undefined;
+    }
+
+    if (timerStatusBarItem) {
+        timerStatusBarItem.dispose();
+        timerStatusBarItem = undefined;
+    }
+
+    timer = 0;
+}
+
 async function updateTimerDisplay() {
     if (!timerStatusBarItem) {
         timerStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
@@ -122,18 +146,18 @@ async function updateScore() {
     if (canAddScore) {
         score++;
     }
-    scoreStatusbarItem.text = `Line Jump Score: ${score}`;
-    scoreStatusbarItem.show();
+    scoreStatusBarItem.text = `Line Jump Score: ${score}/${targetScore}`;
+    scoreStatusBarItem.show();
 }
 
 async function updateScoreDisplay() {
-    if (!scoreStatusbarItem) {
-        scoreStatusbarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    if (!scoreStatusBarItem) {
+        scoreStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     }
     score = 0;
-    scoreStatusbarItem.text = `Line Jump Score: ${score}`;
-    scoreStatusbarItem.tooltip = `Delete Me! Vim - Relative Line Jump score`;
-    scoreStatusbarItem.show();
+    scoreStatusBarItem.text = `Line Jump Score: ${score}/${targetScore}`;
+    scoreStatusBarItem.tooltip = `Delete Me! Vim - Relative Line Jump score`;
+    scoreStatusBarItem.show();
 }
 
 async function spawnNLines(fileUri, numOfLines) {
@@ -185,7 +209,7 @@ async function spawnDeleteMe(fileUri, customMsg = MESSAGE) {
     playing = true;
 
     //console logs because im paranoid :)
-    if (timer > 0) {
+    if (score < targetScore) {
         console.log(`RLJ is ongoing!`)
     } else {
         console.log("RLJ has stopped. score does not count anymore")
@@ -227,10 +251,10 @@ async function deleteListener(document, targetMsg, lineNumber, onDelete) {
 }
 
 async function startGame(fileUri) {
-    startTimer();
+    const document = await vscode.workspace.openTextDocument(fileUri);
+    startTimer(document);
     await spawnDeleteMe(fileUri);
 }
-
 async function initRLJ() {
     const fileUri = await createNewFile('delete-me-vim|relative-line-jump');
     await spawnNLines(fileUri, lineCount);
@@ -241,6 +265,32 @@ async function initRLJ() {
     return fileUri
 }
 
+async function checkAnswer(answer) {
+    if (answer === 'Yes') {
+        const gameFileUri = await initRLJ();
+        await startCountdown();
+        await startGame(gameFileUri);
+        await deleteFile('delete-me-vim|welcome-relative-line-jump');
+    } else if (answer === 'No') {
+        vscode.window.showInformationMessage('Well, try again next time!');
+        vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+        reset();
+        await deleteFile('delete-me-vim|welcome-relative-line-jump');
+    } else {
+        answer = await vscode.window.showInformationMessage(
+            `Make a choice, do not close the notification.`,
+            { modal: true },
+            `Yes`, `No`
+        );
+
+        if (answer) {
+            await checkAnswer(answer);
+        } else {
+            vscode.window.showWarningMessage('You must select an option.');
+        }
+    }
+}
+
 async function relativeLineJump(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand("delete-me-vim.relative-line-jump", async () => {
@@ -248,20 +298,9 @@ async function relativeLineJump(context) {
             const welcomeFileUri = await createNewFile('delete-me-vim|welcome-relative-line-jump')
             await jumpToNewFile(welcomeFileUri);
 
-            const answer = await spawnWelcomeMsg(welcomeFileUri);
+            let answer = await spawnWelcomeMsg(welcomeFileUri);
             console.log(`ANSWER: ${answer}`);
-
-            if (answer === 'Yes') {
-                const gameFileUri = await initRLJ();
-                await startCountdown();
-                await startGame(gameFileUri);
-                await deleteFile('delete-me-vim|welcome-relative-line-jump');
-            } else {
-                vscode.window.showInformationMessage('Well, try again next time!');
-                vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
-                reset();
-                await deleteFile('delete-me-vim|welcome-relative-line-jump');
-            }
+            await checkAnswer(answer);
         })
     );
 }

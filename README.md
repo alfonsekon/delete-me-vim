@@ -1,6 +1,6 @@
 # Delete Me! Vim
 
-Welcome to `Delete Me! Vim`! A simple VS Code extension that aims to train your Vim Motions. This was ***heavily*** inspired by ThePrimeagen's [vim-be-good](https://github.com/ThePrimeagen/vim-be-good) plugin.
+Welcome to `Delete Me! Vim`! A simple VS Code extension that aims to train your Vim Motions. This is ***heavily*** inspired by ThePrimeagen's [vim-be-good](https://github.com/ThePrimeagen/vim-be-good) plugin.
 
 ## Features
 
@@ -13,15 +13,17 @@ As of *Mar 10, 2025*, the only mode is `Relative Line Jump` mode, which trains y
 - Make sure to have your notifications on as you will interact with it
 > Turn off *Do Not Disturb* or *Zen Mode*
 
-<!-- <!-- ## Extension Settings -->
-
 ## Known Issues
 
-- The extension is still in early development so there will be many bugs. 
+- Deleting line/s above the target "Delete Me!" will spawn additional targets, leading to multiple targets being on screen simultaneously.
+- Deleting line/s below the target will not spawn a new line and the player can run out of lines.
 
 ## Release Notes
 
+### 0.0.2
+Added a welcome screen with instructions and a prompt/invitation for the user to play. Score and timer added to add a sense gaming.
+
 ### 0.0.1(?)
-delete-me-vim was born
+delete-me-vim, relative-line-jump mode were born.
 
 ---

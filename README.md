@@ -16,14 +16,14 @@ As of *Mar 10, 2025*, the only mode is `Relative Line Jump` mode, which trains y
 ## Known Issues
 
 - Deleting line/s above the target "Delete Me!" will spawn additional targets, leading to multiple targets being on screen simultaneously.
-- Deleting lines/s below the target will not spawn a new line and the player can run out of lines.
+- Deleting line/s below the target will not spawn a new line and the player can run out of lines.
 
 ## Release Notes
 
 ### 0.0.2
-Added a welcome screen with instructions and a prompt/invitation for the user to play. Score and timer added to add a sense of playing a game
+Added a welcome screen with instructions and a prompt/invitation for the user to play. Score and timer added to add a sense gaming.
 
 ### 0.0.1(?)
-delete-me-vim, relative-line-jump mode were born
+delete-me-vim, relative-line-jump mode were born.
 
 ---

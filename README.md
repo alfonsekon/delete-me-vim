@@ -22,7 +22,7 @@ Open the Command palette `Ctrl+Shift+P` and search for `Delete Me! Vim - Relativ
 
 ## Known Issues
 
-- Only works on Unix-based machines for now
+- Only works on Unix-based machines for now (Only tested on Pop!_OS and WSL so far)
 - Deleting line/s above the target "Delete Me!" will spawn additional targets, leading to multiple targets being on screen simultaneously.
 - Adding line/s above the target will spawn additional targets.
 - Deleting line/s below the target will not spawn a new line and the player can run out of lines.

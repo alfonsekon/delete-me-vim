@@ -14,9 +14,15 @@ As of *Mar 10, 2025*, the only mode is `Relative Line Jump` mode, which trains y
 - Set your [`Editor: Line Numbers`](vscode://settings/editor.lineNumbers) to `relative` (this will change your life)
 - Make sure to have your notifications on as you will interact with it
 > Turn off *Do Not Disturb* or *Zen Mode*
+- Enable Delete Me! Vim Extension in the status bar to see your score and time remaining
+
+## How To Play
+
+Open the Command palette `Ctrl+Shift+P` and search for `Delete Me! Vim - Relative Line Jump` to start/restart the game.
 
 ## Known Issues
 
+- Only works on Unix-based machines for now
 - Deleting line/s above the target "Delete Me!" will spawn additional targets, leading to multiple targets being on screen simultaneously.
 - Adding line/s above the target will spawn additional targets.
 - Deleting line/s below the target will not spawn a new line and the player can run out of lines.

@@ -1,6 +1,11 @@
 const { deleteFiles } = require('./utils/utils');
 const { relativeLineJump } = require('./modes/relativeLineJump');
 
+/**
+ * todo:
+ * refactor RLJ
+ * move this file to src/ (update package.json)
+ */
 async function activate(context) {
     console.log("delete-me-vim is active!");
 

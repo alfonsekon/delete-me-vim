@@ -1,8 +1,9 @@
 const vscode = require("vscode");
 const { deleteFile, jumpToNewFile, spawnText, createNewFile } = require('../utils/utils');
 
+//initial values; will give users option to change
 let lineCount = 15;
-let targetScore = 20;
+let targetScore = 15;
 let canAddScore = true;
 let MESSAGE = 'Delete Me!';
 let playing = false;
@@ -19,6 +20,10 @@ let timerInterval;
 let timerStatusBarItem;
 
 function reset() {
+    /**
+     * resets score, timer and status bar elements
+     */
+
     MESSAGE = 'Delete Me!';
     canAddScore = true;
     playing = false;
@@ -52,6 +57,10 @@ function reset() {
 }
 
 async function startCountdown() {
+    /**
+     * start the countdown (3, 2, 1) before the game starts. displays the countdown in the status bar
+     * and is cleared once the game starts
+     */    
     if (countdownInterval) {
         clearInterval(countdownInterval);
     }
@@ -63,6 +72,7 @@ async function startCountdown() {
         countdownStatusBarItem.show();
     }
 
+    //hide timer once countdown is over
     return new Promise((resolve) => {
         countdownInterval = setInterval(() => {
             if (countdown > 0) {
@@ -79,6 +89,9 @@ async function startCountdown() {
 }
 
 async function endGame() {
+    /**
+     * end game and ask user if they want to play again
+     */
     if (timerInterval) {
         clearInterval(timerInterval);
     }
@@ -88,6 +101,9 @@ async function endGame() {
 }
 
 function startTimer(document) {
+    /**
+     * starts game timer and displays it on status bar. Timer stops and disappears when tab is closed
+     */
     if (timerInterval) {
         clearInterval(timerInterval);
     }
@@ -96,6 +112,7 @@ function startTimer(document) {
     const start = Date.now();
     updateTimerDisplay();
 
+    //listen for tab close
     const tabListener = vscode.window.onDidChangeVisibleTextEditors((editors) => {
         const isDocumentStillOpen = editors.some(editor => editor.document === document);
         if (!isDocumentStillOpen) {
@@ -111,6 +128,7 @@ function startTimer(document) {
         updateTimerDisplay();
 
         if (score >= targetScore) {
+            score = targetScore; //prevent 21/20 from happening if player is somehow that quick
             clearInterval(timerInterval);
             MESSAGE = 'Game Over!';
             canAddScore = false;
@@ -124,6 +142,9 @@ function startTimer(document) {
 
 
 function stopTimer() {
+    /**
+     *  stop timer and hide it from view
+     */
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = undefined;
@@ -138,6 +159,9 @@ function stopTimer() {
 }
 
 async function updateTimerDisplay() {
+    /**
+     * update timer in status bar
+     */
     if (!timerStatusBarItem) {
         timerStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         timerStatusBarItem.show();
@@ -147,6 +171,9 @@ async function updateTimerDisplay() {
 }
 
 async function updateScore() {
+    /**
+     * increment score if game is still ongoing. update the score shown in status bar as well
+     */
     if (canAddScore) {
         score++;
     }
@@ -155,6 +182,9 @@ async function updateScore() {
 }
 
 async function updateScoreDisplay() {
+    /**
+     * show score in status bar
+     */
     if (!scoreStatusBarItem) {
         scoreStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     }
@@ -165,8 +195,24 @@ async function updateScoreDisplay() {
 }
 
 async function spawnNLines(fileUri, numOfLines) {
+    /**
+     * spawn n lines for the target to possibly spawn in (play area)
+     */
     let text = '\n'.repeat(numOfLines);
     await spawnText(fileUri, text);
+}
+
+async function compensateLines(fileUri, document) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+
+    const difference = lineCount - document.lineCount;
+    if (difference > 0) {
+        await editor.edit(editBuilder => {
+            editBuilder.insert(new vscode.Position(0, 0), '\n'.repeat(difference));
+        });
+
+    }
 }
 
 function generateRandomLineNumber(maxLines) {
@@ -174,6 +220,9 @@ function generateRandomLineNumber(maxLines) {
 }
 
 async function countDocumentLines(editor) {
+    /**
+     * return the number of lines the document has
+     */
     const document = editor.document;
     const totalLines = document.lineCount;
 
@@ -181,6 +230,9 @@ async function countDocumentLines(editor) {
 }
 
 async function spawnWelcomeMsg(fileUri) {
+    /**
+     * welcome prompt and ask user first time if they want to play
+     */
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
 
@@ -189,6 +241,8 @@ async function spawnWelcomeMsg(fileUri) {
     Welcome to Delete Me! Vim - Relative Line Jump (RLJ) Mode. 
     Your goal is to delete the 'Delete Me!' lines as quick as you can.
     Up for a challenge? Check your notifications and choose your answer. 
+    Once you start, your score and the time remaining will be displayed
+    in your status bar below. Good luck!
 
     `;
 
@@ -212,6 +266,7 @@ async function spawnDeleteMe(fileUri, customMsg = MESSAGE) {
 
     playing = true;
 
+
     //console logs because im paranoid :)
     if (score < targetScore) {
         console.log(`RLJ is ongoing!`)
@@ -223,6 +278,7 @@ async function spawnDeleteMe(fileUri, customMsg = MESSAGE) {
     await deleteListener(document, customMsg, lineNumber, async () => {
         await updateScore();
         if (timer > 0) {
+            await compensateLines(fileUri, document); 
             await spawnDeleteMe(fileUri);
         }
     });
@@ -236,6 +292,7 @@ async function checkMsg(document, targetMsg, lineNumber) {
     }
 
     const line = document.lineAt(lineNumber);
+    console.log(line.a, lineNumber);
     console.log(`Content at line ${lineNumber} is ${line.text}`);
     return (line.text).length !== 0;
 }
@@ -259,6 +316,7 @@ async function startGame(fileUri) {
     startTimer(document);
     await spawnDeleteMe(fileUri);
 }
+
 async function initRLJ() {
     const fileUri = await createNewFile('delete-me-vim|relative-line-jump');
     await spawnNLines(fileUri, lineCount);

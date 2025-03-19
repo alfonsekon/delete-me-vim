@@ -5,8 +5,7 @@ async function relativeLineJump(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand("delete-me-vim.relative-line-jump", async () => {
             reset();
-            let answer = await waitForAnswer();
-            await checkAnswer(answer);
+            await checkAnswer(await waitForAnswer());
         })
     );
 }

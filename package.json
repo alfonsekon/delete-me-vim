@@ -9,7 +9,7 @@
     "url": "https://github.com/alfonsekon/delete-me-vim"
   },
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.92.0"
   },
   "categories": [
     "Other"
@@ -21,6 +21,10 @@
       {
         "command": "delete-me-vim.relative-line-jump",
         "title": "Delete Me! Vim - Relative Line Jump"
+      },
+      {
+        "command": "delete-me-vim.maze",
+        "title":  "Delete Me! Vim - Maze"
       }
     ]
   },

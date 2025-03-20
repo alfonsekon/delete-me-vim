@@ -95,8 +95,10 @@ async function endGame() {
     if (timerInterval) {
         clearInterval(timerInterval);
     }
-    let tryAgain = await vscode.window.showInformationMessage(`Good job! You deleted ${targetScore} targets in ${timer} seconds! Would you like to play again?`, `Yes`, `No`);
-    console.log(`Try Again: ${tryAgain}`);
+    
+    let tryAgain = await vscode.window.showInformationMessage(`Good job! You deleted ${targetScore} targets in ${timer.toFixed(2)} seconds (${(timer/targetScore).toFixed(2)} seconds/target) Would you like to play again?`, `Yes`, `No`);
+
+    // console.log(`Try Again: ${tryAgain}`);
     await checkAnswer(tryAgain);
 }
 
@@ -116,7 +118,7 @@ function startTimer(document) {
     const tabListener = vscode.window.onDidChangeVisibleTextEditors((editors) => {
         const isDocumentStillOpen = editors.some(editor => editor.document === document);
         if (!isDocumentStillOpen) {
-            console.log(`delete-me-vim|relative-line-jump tab was closed, stopping timer.`);
+            // console.log(`delete-me-vim|relative-line-jump tab was closed, stopping timer.`);
             stopTimer();
             tabListener.dispose();
             reset();
@@ -135,7 +137,7 @@ function startTimer(document) {
             playing = false;
             endGame();
             // console.log(`RLJ has finished. Score was ${score}`);
-            console.log(`RLJ has finished. Time elapsed: ${timer}`);
+            // console.log(`RLJ has finished. Time elapsed: ${timer}`);
         }
     }, 100)
 }
@@ -198,7 +200,7 @@ async function spawnNLines(fileUri, numOfLines) {
     /**
      * spawn n lines for the target to possibly spawn in (play area)
      */
-    let text = '\n'.repeat(numOfLines);
+    const text = '\n'.repeat(numOfLines);
     await spawnText(fileUri, text);
 }
 
@@ -247,6 +249,9 @@ async function spawnWelcomeMsg(fileUri) {
     `;
 
     await spawnText(fileUri, welcomeMsg);
+    await editor.edit(editBuilder => {
+        editBuilder.insert(new vscode.Position(0, 0), welcomeMsg);
+    })
 
     return vscode.window.showInformationMessage("Up for a challenge?", "Yes", "No");
 }
@@ -266,13 +271,12 @@ async function spawnDeleteMe(fileUri, customMsg = MESSAGE) {
 
     playing = true;
 
-
     //console logs because im paranoid :)
-    if (score < targetScore) {
-        console.log(`RLJ is ongoing!`)
-    } else {
-        console.log("RLJ has stopped. score does not count anymore")
-    }
+    // if (score < targetScore) {
+    //     console.log(`RLJ is ongoing!`)
+    // } else {
+    //     console.log("RLJ has stopped. score does not count anymore")
+    // }
     // vscode.window.showInformationMessage(`Spawned '${customMsg}' on line ${ lineNumber + 1 }.`); //+1 for 1 index
 
     await deleteListener(document, customMsg, lineNumber, async () => {
@@ -292,17 +296,14 @@ async function checkMsg(document, targetMsg, lineNumber) {
     }
 
     const line = document.lineAt(lineNumber);
-    console.log(line.a, lineNumber);
-    console.log(`Content at line ${lineNumber} is ${line.text}`);
-    return (line.text).length !== 0;
+    return line.text.trim().length !== 0; 
 }
 
 async function deleteListener(document, targetMsg, lineNumber, onDelete) {
     const disposable = vscode.workspace.onDidChangeTextDocument(async event => {
-        // console.log(`is correct document ?: ${ event.document === document } `);
         if (event.document === document) {
             const stillExists = await checkMsg(document, targetMsg, lineNumber);
-            // console.log(`stillExists ?: ${ stillExists } `);
+
             if (!stillExists) {
                 disposable.dispose();
                 await onDelete();
@@ -336,7 +337,7 @@ async function checkAnswer(answer) {
         await deleteFile('delete-me-vim|welcome-relative-line-jump');
     } else if (answer === 'No') {
         vscode.window.showInformationMessage('Come back next time!');
-        vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+        // vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
         reset();
         await deleteFile('delete-me-vim|welcome-relative-line-jump');
     } else {
@@ -362,4 +363,4 @@ async function waitForAnswer() {
     return answer;
 }
 
-module.exports = { startCountdown, reset, startGame, checkAnswer, spawnWelcomeMsg, waitForAnswer };
+module.exports = { startCountdown, reset, startGame, checkAnswer, spawnWelcomeMsg, waitForAnswer, spawnNLines };

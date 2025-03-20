@@ -34,6 +34,10 @@ In the case of a broken game, restarting the extension by opening the command pa
 
 ## Release Notes
 
+### 0.0.5
+- Bug Fixes
+    - When line count gets low it creates new lines to get it back to normal
+
 ### 0.0.4
 - Fixed a bug where restarting the extension did not reset everything, and the gameplay becomes deleting `Game Over!`s instead of `Delete Me!`s.
 - Added a prompt to restart the game.

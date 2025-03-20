@@ -88,4 +88,10 @@ async function spawnText(fileUri, text) {
     return written
 }
 
-module.exports = { deleteFile, deleteFiles, jumpToNewFile, createNewFile, spawnText, files };
+async function buildText(editor, text) {
+    await editor.edit(editBuilder => {
+        editBuilder.insert(new vscode.Position(0, 0), text);
+    })
+}
+
+module.exports = { deleteFile, deleteFiles, jumpToNewFile, createNewFile, spawnText, buildText, files };

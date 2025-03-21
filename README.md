@@ -2,7 +2,6 @@
 
 Welcome to [Delete Me! Vim](https://marketplace.visualstudio.com/items?itemName=alfonsekon.delete-me-vim)! A simple VS Code extension that aims to train your Vim Motions. This is ***heavily*** inspired by ThePrimeagen's [vim-be-good](https://github.com/ThePrimeagen/vim-be-good) plugin. 
 <br></br>
-I will continue developing this extension and add more modes when I have free time --- *I just don't have a lot of free time right now*.
 
 ## Features
 

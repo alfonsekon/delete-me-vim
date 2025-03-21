@@ -24,7 +24,7 @@ Open the Command palette `Ctrl+Shift+P` and search for `Delete Me! Vim - Relativ
 - Only works on Unix-based machines for now (Only tested on Pop!_OS and WSL so far)
 - Deleting line/s above the target "Delete Me!" will spawn additional targets, leading to multiple targets being on screen simultaneously.
 - Adding line/s above the target will spawn additional targets.
-- Deleting line/s below the target will not spawn a new line and the player can run out of lines.
+- Deleting line/s below the target will not spawn a new line.
 - Performing undos (`u` in Vim) breaks the game.
 
 **I'm sure there's going to be many more than what I have listed above, but these are the only ones I have come across in my limited testing.** 
@@ -33,9 +33,9 @@ In the case of a broken game, restarting the extension by opening the command pa
 
 ## Release Notes
 
-### 0.0.5
+<!-- ### 0.0.5
 - Bug Fixes
-    - When line count gets low it creates new lines to get it back to normal
+    - When line count gets low it creates new lines to get it back to normal -->
 
 ### 0.0.4
 - Fixed a bug where restarting the extension did not reset everything, and the gameplay becomes deleting `Game Over!`s instead of `Delete Me!`s.

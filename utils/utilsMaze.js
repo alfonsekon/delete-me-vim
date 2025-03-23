@@ -1,7 +1,10 @@
 const vscode = require("vscode");
-const { } = require('./utilsRLJ');
+const { generateRandomLineNumber } = require('./utilsRLJ');
 const { maze } = require('./mazeMaze');
 const { buildText, jumpToNewFile, createNewFile } = require('../utils/utils');
+
+const MAZE_WIDTH = 13
+const MAZE_HEIGHT = 18
 
 async function checkX(document) {
     const line = document.lineAt(0);
@@ -28,12 +31,33 @@ async function deleteListener(document) {
 async function spawnX() {
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
+    const document = editor.document;
 
-    await editor.edit(editBuilder => {
-        // editBuilder.insert(new vscode.Position(6, 3), 'X');
-        editBuilder.replace(new vscode.Position(1, 0), 'X');
-        editBuilder.delete(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1)));
-    })
+    let validPosFound = false;
+    let attempts = 0;
+    const maxAttempts = 50;
+
+    console.log(`before while loop`);
+    while (attempts < maxAttempts && !validPosFound) {
+    console.log('within while loop');
+        const x = generateRandomLineNumber(MAZE_WIDTH);
+        const y = generateRandomLineNumber(MAZE_HEIGHT);
+        console.log(`Random numbers: ${x}, ${y}`);
+        const lineText = document.lineAt(x).text;
+
+        if (lineText[y] === ' ') {
+            console.log(`within if condition`); 
+            const pos = new vscode.Position(x, y);
+            await editor.edit(editBuilder => {
+                editBuilder.replace(new vscode.Range(new vscode.Position(x, y), new vscode.Position(x, y+1)), 'X');
+                console.log(`'X' has been spawned at ${pos}`);
+            })
+            validPosFound = true;
+        console.log(`line text at line ${document.lineAt(x).lineNumber} is ${lineText}`);
+        }
+        attempts++;
+    }
+
 }
 
 async function testMaze() {

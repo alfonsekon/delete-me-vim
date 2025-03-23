@@ -363,4 +363,4 @@ async function waitForAnswer() {
     return answer;
 }
 
-module.exports = { startCountdown, reset, startGame, checkAnswer, spawnWelcomeMsg, waitForAnswer, spawnNLines };
+module.exports = { generateRandomLineNumber,  startCountdown, reset, startGame, checkAnswer, spawnWelcomeMsg, waitForAnswer, spawnNLines };
